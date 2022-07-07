@@ -19,6 +19,8 @@ class MainMapViewController: UIViewController, MKMapViewDelegate, NSFetchedResul
     fileprivate func setupFetchedResultsController() {
         
         let fetchRequest:NSFetchRequest<Pin> = Pin.fetchRequest()
+        let sortDescriptor = NSSortDescriptor(key: "latitude", ascending: false)
+        fetchRequest.sortDescriptors = [sortDescriptor]
         
         fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "photos")
         fetchedResultsController.delegate = self
