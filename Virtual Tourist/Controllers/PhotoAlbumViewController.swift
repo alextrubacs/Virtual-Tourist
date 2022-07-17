@@ -19,26 +19,30 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
     var fetchedResultsController:NSFetchedResultsController<Pin>!
     
     fileprivate func setupFetchedResultsController() {
+
         let fetchRequest:NSFetchRequest<Pin> = Pin.fetchRequest()
-        let predicate1 = NSPredicate(format: "latitude == %@", latitude)
-        let predicate2 = NSPredicate(format: "longitude == %@", longitude)
-        fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [predicate1,predicate2])
+        let predicate1 = NSPredicate(format: "latitude == %@", "\(latitude)")
+        let predicate2 = NSPredicate(format: "longitude == %@", "\(longitude)")
+        let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates:[predicate1,predicate2])
+        fetchRequest.predicate = compoundPredicate
+        let sortDescriptor = NSSortDescriptor(key: "latitude", ascending: false)
+        fetchRequest.sortDescriptors = [sortDescriptor]
 
-        
-        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "\(String(describing: pin))-photos")
+        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "pin-photos")
         fetchedResultsController.delegate = self
-
         do {
             try fetchedResultsController.performFetch()
+            print("Fetched Objects results: \(fetchedResultsController.fetchedObjects!.count)")
+            pin = fetchedResultsController.fetchedObjects![0]
         } catch {
             fatalError("The fetch could not be performed: \(error.localizedDescription)")
         }
     }
     
     //MARK: Properties
-    var latitude: Double = 0.0
-    var longitude: Double = 0.0
-    var photos: [Data] = []
+    var latitude: Double!
+    var longitude: Double!
+    var flickrPhotos: [FlickrPhoto]!
     
     //MARK: Outlets
     @IBOutlet weak var mapView: MKMapView!
@@ -55,13 +59,13 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
     //MARK: Life Cycle
     
     override func viewWillAppear(_ animated: Bool) {
+        setupFetchedResultsController()
         createPin(latitude: latitude, longitude: longitude)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         self.navigationController?.navigationBar.isTranslucent = true
-        setupFetchedResultsController()
     }
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -104,68 +108,70 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
         self.mapView.setCenter(annotation.coordinate, animated: true)
         let region = MKCoordinateRegion(center: annotation.coordinate, span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01))
         self.mapView.setRegion(region, animated: true)
-        FlickrClient.photoRequest { response, error in
-            self.handlePhotoRequestResponse(response:response,error: error,annotation:annotation)
-        }
+        
     }
     
-   
-    
+    fileprivate func checkForSavedPhotos() -> [UIImage] {
+        if pin.photos?.count != nil && pin.photos!.count > 0 {
+            return pin.photos!.allObjects as! [UIImage]
+        } else {
+            return []
+        }
+    }
 }
-//TODO: you need to figure out how is your model structures, at the moment it seems its getting a collection of Pins with subset of photos collections, we need to get collection of photos for this particular pin
 extension PhotoAlbumViewController: UICollectionViewDataSource, UICollectionViewDelegate {
     
     // MARK: Collection View Delegate Methods
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return fetchedResultsController.sections?[0].numberOfObjects ?? 0
+        print("\(flickrPhotos.count) urls in the array")
+        return flickrPhotos.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let aPin = fetchedResultsController.object(at: indexPath).photos?.anyObject()
+        let photoUrl = flickrPhotos[indexPath.item]
+        let savedPhotos = checkForSavedPhotos()[indexPath.item]
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PhotoCell.defaultReuseIdentifier, for: indexPath) as! PhotoCell
-       
         
         //Configure cell
         cell.imageView.image = UIImage(systemName: "photo.fill")
         
-        if (fetchedResultsController.sections?[0].numberOfObjects)! > 0 {
-            cell.imageView.image = UIImage(data: aPin as! Data)
+        if flickrPhotos.count > 0 {
+            if flickrPhotos.count == pin.photos?.count {
+                print("\(pin.photos!.count) photos saved in a Pin")
+                DispatchQueue.main.async {
+                    cell.imageView.image = savedPhotos
+                }
+            } else {
+                DispatchQueue.main.async {
+                    FlickrClient.downloadingPhotos(server: photoUrl.server, id: photoUrl.id, secret: photoUrl.secret) { data, error in
+                        if let data = data {
+                            let image = UIImage(data: data)
+                            cell.imageView.image = image
+                            self.saveContext(data: data)
+                        }
+                    }
+                }
+            }
         }
-//            FlickrClient.downloadingPhotos(server: currentCollection.server, id: currentCollection.id, secret: currentCollection.secret) { data, error in
-//                guard let data = data else {
-//                    return
-//                }
-//                DispatchQueue.main.async {
-//                    let image = UIImage(data: data)
-//                    cell.imageView.image = image
-//                    cell.setNeedsLayout()
-//                }
-//            }
-           
-        
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-       // let collection = CollectionModel.collections[0].photoCollection[indexPath.item]
+        // let collection = CollectionModel.collections[0].photoCollection[indexPath.item]
         
         
     }
     
-    fileprivate func handlePhotoRequestResponse(response: FlickrResponse?, error: Error?,annotation: MKPointAnnotation) {
-        if let response = response {
-            for photo in response.photos.photo {
-                FlickrClient.downloadingPhotos(server: photo.server, id: photo.id, secret: photo.secret) { data, error in
-                    guard let data = data else {
-                        return
-                    }
-                    self.photos.append(data)
-                }
-            }
-            addPin(photos: self.photos)
-        } else {
-            print("PhotoCollection could not be created!\(error!.localizedDescription)")
-        }
+    
+    
+}
+    // MARK: Data Controller Methods
+extension PhotoAlbumViewController {
+    
+    func saveContext(data: Data) {
+        self.pin.photos?.adding(UIImage(data: data)!)
+        try? dataController.viewContext.save()
     }
     
 }
+
