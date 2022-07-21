@@ -36,7 +36,7 @@ class MainMapViewController: UIViewController, MKMapViewDelegate, NSFetchedResul
     //MARK: Properties
     var latitude: Double = 0.0
     var longitude: Double = 0.0
-    var flickrPhotos: [FlickrPhoto] = []
+    var flickrPhotos: [Photo] = []
     let locationManager =  CLLocationManager()
     
     //MARK: Outlets
@@ -44,11 +44,15 @@ class MainMapViewController: UIViewController, MKMapViewDelegate, NSFetchedResul
     
     //MARK: Life Cycle
     
+    override func viewWillAppear(_ animated: Bool) {
+        setupFetchedResultsController()
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         mapView.delegate = self
-        setupFetchedResultsController()
         addingTapToHold()
+        //loadSavedPins()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -76,7 +80,7 @@ class MainMapViewController: UIViewController, MKMapViewDelegate, NSFetchedResul
         return pinView
     }
     
-    func checkForSavedPins() {
+    func loadSavedPins() {
         let pins = fetchedResultsController.fetchedObjects!
         // Annotations
         var annotations = [MKPointAnnotation]()
@@ -103,21 +107,26 @@ class MainMapViewController: UIViewController, MKMapViewDelegate, NSFetchedResul
     
     // Delegate method to perform a segue when tapped on a pin
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        for pin in fetchedResultsController.fetchedObjects! {
+            if pin.latitude == view.annotation?.coordinate.latitude && pin.longitude == view.annotation?.coordinate.longitude {
+                print("Pin found and assigned: \(pin)")
+                self.pin = pin
+            }
+        }
         performSegue(withIdentifier: "presentPhotoAlbumView", sender: self)
     }
     
     //MARK: Helper Methods
     // func called when gesture recognizer detects a long press
     @objc func mapLongPress(_ recognizer: UIGestureRecognizer) {
-        
-        print("A long press has been detected.")
-        
+
         let touchedAt = recognizer.location(in: self.mapView) // adds the location on the view it was pressed
         let touchedAtCoordinate : CLLocationCoordinate2D = mapView.convert(touchedAt, toCoordinateFrom: self.mapView) // will get coordinates
         
         createPin(latitude: touchedAtCoordinate.latitude, longitude: touchedAtCoordinate.longitude)
         latitude = touchedAtCoordinate.latitude
         longitude = touchedAtCoordinate.longitude
+        print("A long press has been detected. latitude:\(touchedAtCoordinate.latitude) and longitude\(touchedAtCoordinate.longitude)")
     }
     
     fileprivate func addingTapToHold() {
@@ -142,41 +151,44 @@ class MainMapViewController: UIViewController, MKMapViewDelegate, NSFetchedResul
         self.mapView.setCenter(annotation.coordinate, animated: true)
         let region = MKCoordinateRegion(center: annotation.coordinate, span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01))
         self.mapView.setRegion(region, animated: true)
-        addPin()
-        FlickrClient.photoRequest { response, error in
-            self.handlePhotoRequestResponse(response:response,error: error,annotation:annotation)
+        
+        FlickrClient.photoRequest(latitude:latitude,longitude:longitude) { response, error in
+            self.handlePhotoRequestResponse(response:response,error: error)
         }
     }
     
-    fileprivate func handlePhotoRequestResponse(response: FlickrResponse?, error: Error?,annotation: MKPointAnnotation) {
+    fileprivate func handlePhotoRequestResponse(response: FlickrResponse?, error: Error?) {
         if let response = response {
-            flickrPhotos.append(contentsOf: response.photos.photo)
+            let filteredPhotos = response.photos.photo
+            flickrPhotos.append(contentsOf: filteredPhotos)
+            addPinToCoreData()
         } else {
             print("PhotoCollection could not be created!\(error!.localizedDescription)")
         }
     }
-    
     //MARK: Navigation
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        
         guard segue.identifier == "presentPhotoAlbumView",
               let photoAlbumViewController = segue.destination as? PhotoAlbumViewController else {return}
-        photoAlbumViewController.longitude = self.longitude
-        photoAlbumViewController.latitude = self.latitude
+        photoAlbumViewController.pin = self.pin
         photoAlbumViewController.flickrPhotos = self.flickrPhotos
         photoAlbumViewController.dataController = self.dataController
-        
     }
     
     // MARK: Editing
-
+    
     // Adds a new `Pin` to the end of the `pin`'s array
-    func addPin() {
+    func addPinToCoreData() {
         let pin = Pin(context: dataController.viewContext)
         pin.latitude = self.latitude
         pin.longitude = self.longitude
+        for item in flickrPhotos {
+            let coreItem = CoreURLs()
+            coreItem.url = FlickrClient.Endpoints.photoURL(item.server, item.id, item.secret).url
+            pin.addToCoreURLs(coreItem)
+        }
         try? dataController.viewContext.save()
+        self.pin = pin
     }
 }
-

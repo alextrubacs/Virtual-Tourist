@@ -19,30 +19,25 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
     var fetchedResultsController:NSFetchedResultsController<Pin>!
     
     fileprivate func setupFetchedResultsController() {
-
+        
         let fetchRequest:NSFetchRequest<Pin> = Pin.fetchRequest()
-        let predicate1 = NSPredicate(format: "latitude == %@", "\(latitude)")
-        let predicate2 = NSPredicate(format: "longitude == %@", "\(longitude)")
-        let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates:[predicate1,predicate2])
-        fetchRequest.predicate = compoundPredicate
+        let predicate = NSPredicate(format: "pin == %@", self.pin)
+        fetchRequest.predicate = predicate
         let sortDescriptor = NSSortDescriptor(key: "latitude", ascending: false)
         fetchRequest.sortDescriptors = [sortDescriptor]
-
-        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "pin-photos")
+        
+        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "pin")
         fetchedResultsController.delegate = self
         do {
             try fetchedResultsController.performFetch()
-            print("Fetched Objects results: \(fetchedResultsController.fetchedObjects!.count)")
-            pin = fetchedResultsController.fetchedObjects![0]
         } catch {
             fatalError("The fetch could not be performed: \(error.localizedDescription)")
         }
     }
     
     //MARK: Properties
-    var latitude: Double!
-    var longitude: Double!
-    var flickrPhotos: [FlickrPhoto]!
+    var flickrPhotos: [Photo]!
+    var downloadedImages:[UIImage]!
     
     //MARK: Outlets
     @IBOutlet weak var mapView: MKMapView!
@@ -59,13 +54,15 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
     //MARK: Life Cycle
     
     override func viewWillAppear(_ animated: Bool) {
-        setupFetchedResultsController()
-        createPin(latitude: latitude, longitude: longitude)
+        //setupFetchedResultsController()
+        createPin(latitude: pin.latitude, longitude: pin.longitude)
+        
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         self.navigationController?.navigationBar.isTranslucent = true
+        
     }
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -92,8 +89,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
         }
         return pinView
     }
-    
-    
+
     //MARK: Helper Methods
     
     func createPin(latitude: CLLocationDegrees, longitude: CLLocationDegrees) {
@@ -111,44 +107,29 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
         
     }
     
-    fileprivate func checkForSavedPhotos() -> [UIImage] {
-        if pin.photos?.count != nil && pin.photos!.count > 0 {
-            return pin.photos!.allObjects as! [UIImage]
-        } else {
-            return []
-        }
-    }
 }
+
 extension PhotoAlbumViewController: UICollectionViewDataSource, UICollectionViewDelegate {
     
     // MARK: Collection View Delegate Methods
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         print("\(flickrPhotos.count) urls in the array")
-        return flickrPhotos.count
+        return 48
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let photoUrl = flickrPhotos[indexPath.item]
-        let savedPhotos = checkForSavedPhotos()[indexPath.item]
+        let imageForCell = pin.coreURLs?.object(at: indexPath.item) as! Photo
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PhotoCell.defaultReuseIdentifier, for: indexPath) as! PhotoCell
         
         //Configure cell
         cell.imageView.image = UIImage(systemName: "photo.fill")
-        
         if flickrPhotos.count > 0 {
-            if flickrPhotos.count == pin.photos?.count {
-                print("\(pin.photos!.count) photos saved in a Pin")
-                DispatchQueue.main.async {
-                    cell.imageView.image = savedPhotos
-                }
-            } else {
-                DispatchQueue.main.async {
-                    FlickrClient.downloadingPhotos(server: photoUrl.server, id: photoUrl.id, secret: photoUrl.secret) { data, error in
-                        if let data = data {
-                            let image = UIImage(data: data)
-                            cell.imageView.image = image
-                            self.saveContext(data: data)
-                        }
+            DispatchQueue.main.async {
+                FlickrClient.downloadingPhotos(server: imageForCell.server, id: imageForCell.id, secret: imageForCell.secret) { data, error in
+                    if let data = data {
+                        let image = UIImage(data: data)
+                        cell.imageView.image = image
+                        self.saveContext(image:image!)
                     }
                 }
             }
@@ -157,21 +138,25 @@ extension PhotoAlbumViewController: UICollectionViewDataSource, UICollectionView
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        // let collection = CollectionModel.collections[0].photoCollection[indexPath.item]
         
+        FlickrClient.photoRequest(latitude: pin.latitude, longitude: pin.longitude) { response, error in
+            if let response = response {
+                self.flickrPhotos.remove(at: indexPath.item)
+                self.flickrPhotos.insert(response.photos.photo[152], at: indexPath.item)
+            }
+        }
+        collectionView.reconfigureItems(at: [indexPath])
+        
+//        let imageToDelete = fetchedResultsController.object(at: indexPath)
+//        dataController.viewContext.delete(imageToDelete)
         
     }
-    
-    
-    
 }
     // MARK: Data Controller Methods
 extension PhotoAlbumViewController {
     
-    func saveContext(data: Data) {
-        self.pin.photos?.adding(UIImage(data: data)!)
+    func saveContext(image: UIImage) {
         try? dataController.viewContext.save()
     }
-    
 }
 
