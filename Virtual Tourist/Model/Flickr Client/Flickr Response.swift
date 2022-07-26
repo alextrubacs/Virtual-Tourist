@@ -8,17 +8,17 @@
 import Foundation
 
 struct FlickrResponse: Codable, Equatable {
-    let photos: Photos
+    let photos: FLPhotos
     let stat: String
 }
 
-struct Photos: Codable, Equatable {
+struct FLPhotos: Codable, Equatable {
 
     let page: Int
     let pages: Int
     let perPage: Int
     let total: Int
-    let photo: [Photo]
+    let photo: [FLPhoto]
 
     enum CodingKeys: String, CodingKey {
         case page
@@ -29,7 +29,7 @@ struct Photos: Codable, Equatable {
     }
 }
 
-struct Photo: Codable, Equatable {
+struct FLPhoto: Codable, Equatable {
 
     let id: String
     let owner: String
