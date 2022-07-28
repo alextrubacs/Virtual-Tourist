@@ -20,7 +20,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
     
     
     //MARK: Properties
-    
+    var savedPhotos: Bool!
     
     //MARK: Outlets
     @IBOutlet weak var mapView: MKMapView!
@@ -41,7 +41,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
     //MARK: Life Cycle
     
     override func viewWillAppear(_ animated: Bool) {
-        createPin(latitude: pin.latitude, longitude: pin.longitude)
+        createPinForMap(latitude: pin.latitude, longitude: pin.longitude)
         startIndicator(false)
     }
     
@@ -77,7 +77,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
 
     //MARK: Helper Methods
     
-    func createPin(latitude: CLLocationDegrees, longitude: CLLocationDegrees) {
+    func createPinForMap(latitude: CLLocationDegrees, longitude: CLLocationDegrees) {
         mapView.removeAnnotations(mapView.annotations)
         
         let annotation = MKPointAnnotation()

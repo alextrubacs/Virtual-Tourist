@@ -25,38 +25,49 @@ extension PhotoAlbumViewController: UICollectionViewDataSource, UICollectionView
         }
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PhotoCell.defaultReuseIdentifier, for: indexPath) as! PhotoCell
         
-        returnSavedImagesOrURLs(indexPath, cell)
-        
-        
+        returnSavedImagesOrURLs(savedPhotos: savedPhotos, indexPath, cell)
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let imageToDelete = pin.coreURLs?.object(at: indexPath.item)
-        dataController.viewContext.delete(imageToDelete as! NSManagedObject)
+        pin.removeFromCoreURLs(at: indexPath.item)
+        pin.removeFromCorePhotos(at: indexPath.item)
         collectionView.deleteItems(at: [indexPath])
     }
     
     //MARK: Helper Methods
-    fileprivate func returnSavedImagesOrURLs(_ indexPath: IndexPath, _ cell: PhotoCell) {
-        switch pin.corePhotos!.count > 0 {
+    fileprivate func returnSavedImagesOrURLs(savedPhotos: Bool, _ indexPath: IndexPath, _ cell: PhotoCell) {
+        switch savedPhotos {
         case false:
             let coreUrl = pin.coreURLs?.object(at: indexPath.item) as! CoreURLs
             //Configure cell
             cell.imageView.image = UIImage(systemName: "photo.fill")
+            cell.activityIndicator.startAnimating()
             if let url = coreUrl.url {
                     FlickrClient.downloadingPhotosFromCore(url: url) { data, error in
                         if let data = data {
                             let image = UIImage(data: data)
                             cell.imageView.image = image
+                            cell.activityIndicator.stopAnimating()
+                            cell.activityIndicator.isHidden = true
+                            let coreImage = CorePhoto(context: self.dataController.viewContext)
+                            coreImage.corePhoto = data
+                            self.pin.addToCorePhotos(coreImage)
                             self.saveContext()
                         }
                     }
             }
         case true:
-            let coreImage = pin.corePhotos?.object(at: indexPath.item) as! UIImage
-            //Configure cell
-            cell.imageView.image = coreImage
+            let coreImage = pin.corePhotos?.object(at: indexPath.item) as! CorePhoto
+            DispatchQueue.main.async {
+                if let data = coreImage.corePhoto {
+                    cell.activityIndicator.stopAnimating()
+                    cell.activityIndicator.isHidden = true
+                    //Configure cell
+                    cell.imageView.image = UIImage(data: data)
+                }
+            }
+            
         }
     }
     

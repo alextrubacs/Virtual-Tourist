@@ -14,6 +14,9 @@ extension MainMapViewController {
     //MARK: Helper Methods
     // func called when gesture recognizer detects a long press
     @objc func mapLongPress(_ recognizer: UIGestureRecognizer) {
+        if recognizer.state != .began {
+            return
+        }
         
         let touchedAt = recognizer.location(in: self.mapView) // adds the location on the view it was pressed
         let touchedAtCoordinate : CLLocationCoordinate2D = mapView.convert(touchedAt, toCoordinateFrom: self.mapView) // will get coordinates
@@ -67,6 +70,7 @@ extension MainMapViewController {
               let photoAlbumViewController = segue.destination as? PhotoAlbumViewController else {return}
         photoAlbumViewController.pin = self.pin
         photoAlbumViewController.dataController = self.dataController
+        photoAlbumViewController.savedPhotos = pin.corePhotos!.count > 0 ? true : false
     }
     
     // MARK: Editing

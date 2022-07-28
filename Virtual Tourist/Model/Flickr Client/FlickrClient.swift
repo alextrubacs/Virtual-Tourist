@@ -9,7 +9,6 @@ import Foundation
 
 
 class FlickrClient {
-    //https://www.flickr.com/services/rest/?method=flickr.photos.search&api_key=2d5e33493e01cd248f6d52fba308950a&accuracy=16&lat=51.50598040999933&lon=-0.07505842805945191&page=48&format=json&nojsoncallback=1
     
     static let apiKey = "2d5e33493e01cd248f6d52fba308950a"
     static let secret = "90c750890a52ebac"
@@ -23,7 +22,7 @@ class FlickrClient {
         var stringValue: String {
             switch self {
             case .photoRequest(let latitude, let longitude):
-                return Endpoints.base + "&api_key=\(FlickrClient.apiKey)&accuracy=16&lat=\(latitude)&lon=\(longitude)&per_page=48&page=\(Int.random(in: 1...47))&format=json&nojsoncallback=1"
+                return Endpoints.base + "&api_key=\(FlickrClient.apiKey)&accuracy=16&lat=\(latitude)&lon=\(longitude)&per_page=18&page=\(Int.random(in: 1...47))&format=json&nojsoncallback=1"
             case .photoURL(let server,let id, let secret):
                 return Endpoints.photoBase + "\(server)/\(id)_\(secret).jpg"
             }

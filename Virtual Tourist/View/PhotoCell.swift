@@ -11,12 +11,10 @@ import UIKit
  class PhotoCell: UICollectionViewCell, Cell {
     // Outlets
      @IBOutlet weak var imageView: UIImageView!
-     
-     
+     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     override func prepareForReuse() {
         super.prepareForReuse()
-
     }
 }
 

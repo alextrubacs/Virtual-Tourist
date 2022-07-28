@@ -112,6 +112,10 @@
                                                         <constraint firstAttribute="height" constant="128" id="CGe-gS-0kz"/>
                                                     </constraints>
                                                 </imageView>
+                                                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="rcb-HS-Igx">
+                                                    <rect key="frame" x="54" y="54" width="20" height="20"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                </activityIndicatorView>
                                             </subviews>
                                             <constraints>
                                                 <constraint firstItem="F2X-jm-cN6" firstAttribute="leading" secondItem="JzS-Hc-Jka" secondAttribute="leading" id="Uc6-to-Lvg"/>
@@ -122,6 +126,7 @@
                                         </collectionViewCellContentView>
                                         <size key="customSize" width="128" height="128"/>
                                         <connections>
+                                            <outlet property="activityIndicator" destination="rcb-HS-Igx" id="bXz-8n-vfe"/>
                                             <outlet property="imageView" destination="F2X-jm-cN6" id="pZw-BM-zRw"/>
                                         </connections>
                                     </collectionViewCell>
