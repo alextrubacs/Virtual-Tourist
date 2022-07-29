@@ -112,15 +112,16 @@
                                                         <constraint firstAttribute="height" constant="128" id="CGe-gS-0kz"/>
                                                     </constraints>
                                                 </imageView>
-                                                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="rcb-HS-Igx">
+                                                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="rcb-HS-Igx">
                                                     <rect key="frame" x="54" y="54" width="20" height="20"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                                 </activityIndicatorView>
                                             </subviews>
                                             <constraints>
+                                                <constraint firstItem="rcb-HS-Igx" firstAttribute="centerY" secondItem="JzS-Hc-Jka" secondAttribute="centerY" id="0Mc-2I-ns0"/>
                                                 <constraint firstItem="F2X-jm-cN6" firstAttribute="leading" secondItem="JzS-Hc-Jka" secondAttribute="leading" id="Uc6-to-Lvg"/>
                                                 <constraint firstAttribute="bottom" secondItem="F2X-jm-cN6" secondAttribute="bottom" id="Z2C-su-MOy"/>
                                                 <constraint firstItem="F2X-jm-cN6" firstAttribute="top" secondItem="JzS-Hc-Jka" secondAttribute="top" id="bBs-HD-bgf"/>
+                                                <constraint firstItem="rcb-HS-Igx" firstAttribute="centerX" secondItem="JzS-Hc-Jka" secondAttribute="centerX" id="j1t-Lv-tvg"/>
                                                 <constraint firstAttribute="trailing" secondItem="F2X-jm-cN6" secondAttribute="trailing" id="rVQ-Kh-G0Q"/>
                                             </constraints>
                                         </collectionViewCellContentView>

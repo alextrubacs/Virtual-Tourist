@@ -34,6 +34,8 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
     @IBAction func newCollectionButtonPressed(_ sender: Any) {
         startIndicator(true)
         newCollectionButton.isEnabled = false
+        deletingObjectsFromCoreData(objects: pin.corePhotos!)
+        deletingObjectsFromCoreData(objects: pin.coreURLs!)
         downloadingNewImageURLs()
         startIndicator(false)
     }
@@ -43,11 +45,13 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
     override func viewWillAppear(_ animated: Bool) {
         createPinForMap(latitude: pin.latitude, longitude: pin.longitude)
         startIndicator(false)
+        debugPrint("Are There any saved photos during viewWillAppear: \(savedPhotos!)")
+        
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.navigationController?.navigationBar.isTranslucent = true
+        navigationController?.navigationBar.isTranslucent = true
     }
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -85,27 +89,20 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
         annotation.coordinate.latitude = latitude
         annotation.coordinate.longitude = longitude
         
-        self.mapView.addAnnotation(annotation)
-        self.mapView.setCenter(annotation.coordinate, animated: true)
+        mapView.addAnnotation(annotation)
+        mapView.setCenter(annotation.coordinate, animated: true)
         let region = MKCoordinateRegion(center: annotation.coordinate, span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01))
-        self.mapView.setRegion(region, animated: true)
+        mapView.setRegion(region, animated: true)
         
     }
     
     func startIndicator(_ start: Bool) {
-        if start {
-            self.activityIndicator.isHidden = false
-            self.activityIndicator.startAnimating()
-        } else if start == false {
-            self.activityIndicator.isHidden = true
-            self.activityIndicator.stopAnimating()
-        }
+        start ? activityIndicator.startAnimating() : activityIndicator.stopAnimating()
+        activityIndicator.isHidden = !start
     }
     
     fileprivate func downloadingNewImageURLs() {
-        let indexSet = NSIndexSet(indexSet: IndexSet(integersIn: 0...pin.coreURLs!.count - 1))
-        self.pin.removeFromCoreURLs(at: indexSet)
-        self.collectionView.reloadData()
+        activityIndicator.isHidden = false
         FlickrClient.photoRequest(latitude:pin.latitude,longitude:pin.longitude) { response, error in
             if let response = response {
                 let downloadedURLs = response.photos.photo
@@ -117,8 +114,8 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
                 }
                 
                 self.pin.addToCoreURLs(NSOrderedSet(array: coreUrls))
-                
                 try? self.dataController.viewContext.save()
+                self.savedPhotos = false
                 self.collectionView.reloadData()
                 self.newCollectionButton.isEnabled = true
             } else {

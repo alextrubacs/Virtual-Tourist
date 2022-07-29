@@ -108,7 +108,8 @@ class MainMapViewController: UIViewController, MKMapViewDelegate, NSFetchedResul
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
         for pin in fetchedResultsController.fetchedObjects! {
             if pin.latitude == view.annotation?.coordinate.latitude && pin.longitude == view.annotation?.coordinate.longitude {
-                print("Pin found and assigned: \(pin)")
+                debugPrint("Pin found and assigned: \(pin)")
+                debugPrint("With \(pin.corePhotos!.count) saved photos")
                 self.pin = pin
             }
         }
