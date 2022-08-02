@@ -36,7 +36,6 @@ class MainMapViewController: UIViewController, MKMapViewDelegate, NSFetchedResul
     //MARK: Properties
     var latitude: Double = 0.0
     var longitude: Double = 0.0
-    var flickrPhotos: [FLPhoto] = []
     let locationManager =  CLLocationManager()
     
     //MARK: Outlets

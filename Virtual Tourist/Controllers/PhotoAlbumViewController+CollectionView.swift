@@ -21,14 +21,16 @@ extension PhotoAlbumViewController: UICollectionViewDataSource, UICollectionView
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PhotoCell.defaultReuseIdentifier, for: indexPath) as! PhotoCell
-        
         returnSavedImagesOrURLs(savedPhotos: savedPhotos, indexPath, cell)
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        pin.removeFromCoreURLs(at: indexPath.item)
-        pin.removeFromCorePhotos(at: indexPath.item)
+//        pin.removeFromCoreURLs(at: indexPath.item)
+//        pin.removeFromCorePhotos(at: indexPath.item
+        let object = fetchedResultsController.fetchedObjects![0].corePhotos!
+        let selectedPhoto = object[indexPath.item] as! NSManagedObject
+        dataController.viewContext.delete(selectedPhoto)
         collectionView.deleteItems(at: [indexPath])
     }
     
@@ -36,11 +38,11 @@ extension PhotoAlbumViewController: UICollectionViewDataSource, UICollectionView
     fileprivate func returnSavedImagesOrURLs(savedPhotos: Bool, _ indexPath: IndexPath, _ cell: PhotoCell) {
         switch savedPhotos {
         case false:
-            let coreUrl = pin.coreURLs?.object(at: indexPath.item) as! CoreURLs
+            let coreUrl = pin.coreURLs?.object(at: indexPath.item) as! CorePhoto
             //Configure cell
             cell.imageView.image = UIImage(systemName: "photo.fill")
             cell.activityIndicator.startAnimating()
-            if let url = coreUrl.url {
+            if let url = coreUrl.coreURL {
                 FlickrClient.downloadingPhotosFromCore(url: url) { data, error in
                     if let data = data {
                         let image = UIImage(data: data)
@@ -51,7 +53,7 @@ extension PhotoAlbumViewController: UICollectionViewDataSource, UICollectionView
                         coreImage.corePhoto = data
                         self.pin.addToCorePhotos(coreImage)
                         self.saveContext()
-                        self.limitDownloadTo21()
+                        //self.limitDownload()
                     }
                 }
             }
@@ -67,8 +69,8 @@ extension PhotoAlbumViewController: UICollectionViewDataSource, UICollectionView
             }
         }
     }
-    fileprivate func limitDownloadTo21() {
-        if self.pin.corePhotos!.count < 21 {return} else {self.savedPhotos = true}
+    fileprivate func limitDownload() {
+        if self.pin.corePhotos!.count < 18 {return} else {self.savedPhotos = true}
         self.collectionView.reloadData()
     }
     

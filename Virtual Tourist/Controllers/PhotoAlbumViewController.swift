@@ -17,7 +17,22 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
     var dataController:DataController!
     
     var fetchedResultsController:NSFetchedResultsController<Pin>!
-    
+    fileprivate func setupFetchedResultsController() {
+        
+        let fetchRequest:NSFetchRequest<Pin> = Pin.fetchRequest()
+        let predicate = NSPredicate(format: "latitude == %@", pin.latitude)
+        fetchRequest.predicate = predicate
+        let sortDescriptor = NSSortDescriptor(key: "latitude", ascending: false)
+        fetchRequest.sortDescriptors = [sortDescriptor]
+        
+        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "pin")
+        fetchedResultsController.delegate = self
+        do {
+            try fetchedResultsController.performFetch()
+        } catch {
+            fatalError("The fetch could not be performed: \(error.localizedDescription)")
+        }
+    }
     
     //MARK: Properties
     var savedPhotos: Bool!
@@ -47,6 +62,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
     }
     
     override func viewDidLoad() {
+        setupFetchedResultsController()
         super.viewDidLoad()
         navigationController?.navigationBar.isTranslucent = true
     }
@@ -98,9 +114,9 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
             if let response = response {
                 let downloadedURLs = response.photos.photo
                 
-                let coreUrls = downloadedURLs.map { flickrPhoto -> CoreURLs in
-                    let coreItem = CoreURLs(context: self.dataController.viewContext)
-                    coreItem.url = FlickrClient.Endpoints.photoURL(flickrPhoto.server, flickrPhoto.id, flickrPhoto.secret).url
+                let coreUrls = downloadedURLs.map { flickrPhoto -> CorePhoto in
+                    let coreItem = CorePhoto(context: self.dataController.viewContext)
+                    coreItem.coreURL = FlickrClient.Endpoints.photoURL(flickrPhoto.server, flickrPhoto.id, flickrPhoto.secret).url
                     return coreItem
                 }
                 

@@ -17,7 +17,6 @@ extension MainMapViewController {
         if recognizer.state != .began {
             return
         }
-        
         let touchedAt = recognizer.location(in: self.mapView) // adds the location on the view it was pressed
         let touchedAtCoordinate : CLLocationCoordinate2D = mapView.convert(touchedAt, toCoordinateFrom: self.mapView) // will get coordinates
         
@@ -56,9 +55,7 @@ extension MainMapViewController {
     
     func handlePhotoRequestResponse(response: FlickrResponse?, error: Error?) {
         if let response = response {
-            let filteredPhotos = response.photos.photo
-            flickrPhotos.append(contentsOf: filteredPhotos)
-            addPinToCoreData()
+            addPinToCoreData(flickrResponse: response.photos.photo)
         } else {
             print("PhotoCollection could not be created!\(error!.localizedDescription)")
         }
@@ -76,14 +73,14 @@ extension MainMapViewController {
     // MARK: Editing
     
     // Adds a new `Pin` to the end of the `pin`'s array
-    func addPinToCoreData() {
+    func addPinToCoreData(flickrResponse: [FLPhoto]) {
         let pin = Pin(context: dataController.viewContext)
         pin.latitude = self.latitude
         pin.longitude = self.longitude
         
-        let coreUrls = flickrPhotos.map { flickrPhoto -> CoreURLs in
-            let coreItem = CoreURLs(context: dataController.viewContext)
-            coreItem.url = FlickrClient.Endpoints.photoURL(flickrPhoto.server, flickrPhoto.id, flickrPhoto.secret).url
+        let coreUrls = flickrResponse.map { flickrPhoto -> CorePhoto in
+            let coreItem = CorePhoto(context: dataController.viewContext)
+            coreItem.coreURL = FlickrClient.Endpoints.photoURL(flickrPhoto.server, flickrPhoto.id, flickrPhoto.secret).url
             return coreItem
         }
         pin.addToCoreURLs(NSOrderedSet(array: coreUrls))
