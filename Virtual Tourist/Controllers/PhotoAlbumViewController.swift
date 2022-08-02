@@ -49,7 +49,6 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
     @IBAction func newCollectionButtonPressed(_ sender: Any) {
         newCollectionButton.isEnabled = false
         deletingObjectsFromCoreData(objects: pin.corePhotos!)
-        deletingObjectsFromCoreData(objects: pin.coreURLs!)
         downloadingNewImageURLs()
     }
     
