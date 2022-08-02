@@ -32,19 +32,16 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
     
     //MARK: Actions
     @IBAction func newCollectionButtonPressed(_ sender: Any) {
-        startIndicator(true)
         newCollectionButton.isEnabled = false
         deletingObjectsFromCoreData(objects: pin.corePhotos!)
         deletingObjectsFromCoreData(objects: pin.coreURLs!)
         downloadingNewImageURLs()
-        startIndicator(false)
     }
     
     //MARK: Life Cycle
     
     override func viewWillAppear(_ animated: Bool) {
         createPinForMap(latitude: pin.latitude, longitude: pin.longitude)
-        startIndicator(false)
         debugPrint("Are There any saved photos during viewWillAppear: \(savedPhotos!)")
         
     }
@@ -96,13 +93,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
         
     }
     
-    func startIndicator(_ start: Bool) {
-        start ? activityIndicator.startAnimating() : activityIndicator.stopAnimating()
-        activityIndicator.isHidden = !start
-    }
-    
     fileprivate func downloadingNewImageURLs() {
-        activityIndicator.isHidden = false
         FlickrClient.photoRequest(latitude:pin.latitude,longitude:pin.longitude) { response, error in
             if let response = response {
                 let downloadedURLs = response.photos.photo

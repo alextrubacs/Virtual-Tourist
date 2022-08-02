@@ -20,9 +20,6 @@ extension PhotoAlbumViewController: UICollectionViewDataSource, UICollectionView
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-//        if dataController.viewContext.hasChanges {
-//            collectionView.reloadData()
-//        }
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PhotoCell.defaultReuseIdentifier, for: indexPath) as! PhotoCell
         
         returnSavedImagesOrURLs(savedPhotos: savedPhotos, indexPath, cell)
@@ -33,8 +30,6 @@ extension PhotoAlbumViewController: UICollectionViewDataSource, UICollectionView
         pin.removeFromCoreURLs(at: indexPath.item)
         pin.removeFromCorePhotos(at: indexPath.item)
         collectionView.deleteItems(at: [indexPath])
-        // Apologies i am not sure what do you mean here, as it works perfectly fine at the moment, apart from when you press it 6th or 7th time in a row. The whole collections view doesnt seem to be refreshing and deletion animation works fine.
-    
     }
     
     //MARK: Helper Methods
@@ -56,6 +51,7 @@ extension PhotoAlbumViewController: UICollectionViewDataSource, UICollectionView
                         coreImage.corePhoto = data
                         self.pin.addToCorePhotos(coreImage)
                         self.saveContext()
+                        self.limitDownloadTo21()
                     }
                 }
             }
@@ -70,6 +66,10 @@ extension PhotoAlbumViewController: UICollectionViewDataSource, UICollectionView
                 }
             }
         }
+    }
+    fileprivate func limitDownloadTo21() {
+        if self.pin.corePhotos!.count < 21 {return} else {self.savedPhotos = true}
+        self.collectionView.reloadData()
     }
     
 }
