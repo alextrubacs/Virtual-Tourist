@@ -114,9 +114,9 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
             if let response = response {
                 let downloadedURLs = response.photos.photo
                 
-                let coreUrls = downloadedURLs.map { flickrPhoto -> CorePhoto in
-                    let coreItem = CorePhoto(context: self.dataController.viewContext)
-                    coreItem.coreURL = FlickrClient.Endpoints.photoURL(flickrPhoto.server, flickrPhoto.id, flickrPhoto.secret).url
+                let coreUrls = downloadedURLs.map { flickrPhoto -> CoreURL in
+                    let coreItem = CoreURL(context: self.dataController.viewContext)
+                    coreItem.url = FlickrClient.Endpoints.photoURL(flickrPhoto.server, flickrPhoto.id, flickrPhoto.secret).url
                     return coreItem
                 }
                 

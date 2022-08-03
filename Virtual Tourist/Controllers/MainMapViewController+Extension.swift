@@ -78,9 +78,9 @@ extension MainMapViewController {
         pin.latitude = self.latitude
         pin.longitude = self.longitude
         
-        let coreUrls = flickrResponse.map { flickrPhoto -> CorePhoto in
-            let coreItem = CorePhoto(context: dataController.viewContext)
-            coreItem.coreURL = FlickrClient.Endpoints.photoURL(flickrPhoto.server, flickrPhoto.id, flickrPhoto.secret).url
+        let coreUrls = flickrResponse.map { flickrPhoto -> CoreURL in
+            let coreItem = CoreURL(context: dataController.viewContext)
+            coreItem.url = FlickrClient.Endpoints.photoURL(flickrPhoto.server, flickrPhoto.id, flickrPhoto.secret).url
             return coreItem
         }
         pin.addToCoreURLs(NSOrderedSet(array: coreUrls))
