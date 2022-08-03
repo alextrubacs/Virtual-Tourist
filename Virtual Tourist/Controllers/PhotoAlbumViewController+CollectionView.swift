@@ -23,51 +23,40 @@ extension PhotoAlbumViewController: UICollectionViewDataSource, UICollectionView
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PhotoCell.defaultReuseIdentifier, for: indexPath) as! PhotoCell
-        returnSavedImagesOrURLs(savedPhotos: savedPhotos, indexPath, cell)
+        let coreImage = pin.corePhotos?.object(at: indexPath.item) as! CorePhoto
+        checkForSavedPhotos(coreImage, cell)
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        pin.removeFromCoreURLs(at: indexPath.item)
-       // pin.removeFromCorePhotos(at: indexPath.item)
+        pin.removeFromCorePhotos(at: indexPath.item)
         collectionView.deleteItems(at: [indexPath])
     }
     
     //MARK: Helper Methods
-    fileprivate func returnSavedImagesOrURLs(savedPhotos: Bool, _ indexPath: IndexPath, _ cell: PhotoCell) {
-        switch savedPhotos {
-        case false:
-            let coreUrl = pin.coreURLs?.object(at: indexPath.item) as! CorePhoto
+    fileprivate func checkForSavedPhotos(_ coreImage: CorePhoto, _ cell: PhotoCell) {
+        if let data = coreImage.corePhoto {
+            cell.activityIndicator.stopAnimating()
+            cell.activityIndicator.isHidden = true
             //Configure cell
-            cell.imageView.image = UIImage(systemName: "photo.fill")
-            cell.activityIndicator.startAnimating()
-            if let url = coreUrl.coreURL {
-                FlickrClient.downloadingPhotosFromCore(url: url) { data, error in
-                    if let data = data {
-                        let image = UIImage(data: data)
-                        cell.imageView.image = image
-                        cell.activityIndicator.stopAnimating()
-                        cell.activityIndicator.isHidden = true
-                        coreUrl.corePhoto = data
-                        self.saveContext()
-                        self.limitDownload()
-                    }
-                }
-            }
-        case true:
-            let coreImage = pin.coreURLs?.object(at: indexPath.item) as! CorePhoto
-            DispatchQueue.main.async {
-                if let data = coreImage.corePhoto {
+            cell.imageView.image = UIImage(data: data)
+        } else if let url = coreImage.coreURL {
+            FlickrClient.downloadingPhotosFromCore(url: url) { data, error in
+                if let data = data {
+                    let image = UIImage(data: data)
+                    cell.imageView.image = image
                     cell.activityIndicator.stopAnimating()
                     cell.activityIndicator.isHidden = true
-                    //Configure cell
-                    cell.imageView.image = UIImage(data: data)
+                    coreImage.corePhoto = data
+                    self.saveContext()
+                    //self.limitDownload()
                 }
             }
         }
     }
+    
     fileprivate func limitDownload() {
-        if self.pin.corePhotos!.count <= 18 {return} else {self.savedPhotos = true}
+        if self.pin.corePhotos!.count < 18 {return} else {self.savedPhotos = true}
         self.collectionView.reloadData()
     }
     

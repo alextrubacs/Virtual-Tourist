@@ -67,7 +67,8 @@ extension MainMapViewController {
               let photoAlbumViewController = segue.destination as? PhotoAlbumViewController else {return}
         photoAlbumViewController.pin = self.pin
         photoAlbumViewController.dataController = self.dataController
-        photoAlbumViewController.savedPhotos = pin.coreURL.count > 0 ? true : false
+        
+        photoAlbumViewController.savedPhotos = pin.corePhotos!.count > 0 ? true : false
     }
     
     // MARK: Editing
@@ -83,7 +84,7 @@ extension MainMapViewController {
             coreItem.coreURL = FlickrClient.Endpoints.photoURL(flickrPhoto.server, flickrPhoto.id, flickrPhoto.secret).url
             return coreItem
         }
-        pin.addToCoreURLs(NSOrderedSet(array: coreUrls))
+        pin.addToCorePhotos(NSOrderedSet(array: coreUrls))
         
         try? dataController.viewContext.save()
         self.pin = pin

@@ -49,7 +49,6 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
     @IBAction func newCollectionButtonPressed(_ sender: Any) {
         newCollectionButton.isEnabled = false
         deletingObjectsFromCoreData(objects: pin.corePhotos!)
-        deletingObjectsFromCoreData(objects: pin.coreURLs!)
         downloadingNewImageURLs()
     }
     
@@ -119,7 +118,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
                     return coreItem
                 }
                 
-                self.pin.addToCoreURLs(NSOrderedSet(array: coreUrls))
+                self.pin.addToCorePhotos(NSOrderedSet(array: coreUrls))
                 try? self.dataController.viewContext.save()
                 self.savedPhotos = false
                 self.collectionView.reloadData()
