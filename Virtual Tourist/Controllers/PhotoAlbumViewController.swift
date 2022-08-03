@@ -20,7 +20,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
     fileprivate func setupFetchedResultsController() {
         
         let fetchRequest:NSFetchRequest<Pin> = Pin.fetchRequest()
-        let predicate = NSPredicate(format: "latitude == %@", pin.latitude)
+        let predicate = NSPredicate(format: "pin == %@", pin)
         fetchRequest.predicate = predicate
         let sortDescriptor = NSSortDescriptor(key: "latitude", ascending: false)
         fetchRequest.sortDescriptors = [sortDescriptor]
@@ -62,7 +62,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
     }
     
     override func viewDidLoad() {
-        setupFetchedResultsController()
+        //setupFetchedResultsController()
         super.viewDidLoad()
         navigationController?.navigationBar.isTranslucent = true
     }
