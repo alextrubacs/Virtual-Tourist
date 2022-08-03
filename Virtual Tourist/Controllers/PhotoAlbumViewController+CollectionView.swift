@@ -18,7 +18,7 @@ extension PhotoAlbumViewController: UICollectionViewDataSource, UICollectionView
     // MARK: Collection View Delegate Methods
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         
-        return savedPhotos ? pin.corePhotos!.count : pin.coreURLs!.count
+        return pin.corePhotos?.count ?? 0
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -29,7 +29,7 @@ extension PhotoAlbumViewController: UICollectionViewDataSource, UICollectionView
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         pin.removeFromCoreURLs(at: indexPath.item)
-        pin.removeFromCorePhotos(at: indexPath.item)
+       // pin.removeFromCorePhotos(at: indexPath.item)
         collectionView.deleteItems(at: [indexPath])
     }
     
@@ -55,7 +55,7 @@ extension PhotoAlbumViewController: UICollectionViewDataSource, UICollectionView
                 }
             }
         case true:
-            let coreImage = pin.corePhotos?.object(at: indexPath.item) as! CorePhoto
+            let coreImage = pin.coreURLs?.object(at: indexPath.item) as! CorePhoto
             DispatchQueue.main.async {
                 if let data = coreImage.corePhoto {
                     cell.activityIndicator.stopAnimating()

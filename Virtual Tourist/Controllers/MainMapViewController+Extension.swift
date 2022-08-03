@@ -67,7 +67,7 @@ extension MainMapViewController {
               let photoAlbumViewController = segue.destination as? PhotoAlbumViewController else {return}
         photoAlbumViewController.pin = self.pin
         photoAlbumViewController.dataController = self.dataController
-        photoAlbumViewController.savedPhotos = pin.corePhotos!.count > 0 ? true : false
+        photoAlbumViewController.savedPhotos = pin.coreURL.count > 0 ? true : false
     }
     
     // MARK: Editing
