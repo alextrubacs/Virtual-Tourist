@@ -49,6 +49,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
     @IBAction func newCollectionButtonPressed(_ sender: Any) {
         newCollectionButton.isEnabled = false
         deletingObjectsFromCoreData(objects: pin.corePhotos!)
+        deletingObjectsFromCoreData(objects: pin.coreURLs!)
         downloadingNewImageURLs()
     }
     
@@ -61,7 +62,6 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
     }
     
     override func viewDidLoad() {
-        setupFetchedResultsController()
         super.viewDidLoad()
         navigationController?.navigationBar.isTranslucent = true
     }

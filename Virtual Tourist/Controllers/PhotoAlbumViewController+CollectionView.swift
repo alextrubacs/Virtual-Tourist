@@ -9,14 +9,16 @@ import UIKit
 import MapKit
 import CoreData
 
-let myImageDownloadQueue = DispatchQueue(label: "com.virtualtourist.image_download_queue")
-
 extension PhotoAlbumViewController: UICollectionViewDataSource, UICollectionViewDelegate {
+    
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        1
+    }
     
     // MARK: Collection View Delegate Methods
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         
-        return pin.coreURLs?.count ?? 0
+        return savedPhotos ? pin.corePhotos!.count : pin.coreURLs!.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -26,11 +28,8 @@ extension PhotoAlbumViewController: UICollectionViewDataSource, UICollectionView
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-//        pin.removeFromCoreURLs(at: indexPath.item)
-//        pin.removeFromCorePhotos(at: indexPath.item
-        let object = fetchedResultsController.fetchedObjects![0].corePhotos!
-        let selectedPhoto = object[indexPath.item] as! NSManagedObject
-        dataController.viewContext.delete(selectedPhoto)
+        pin.removeFromCoreURLs(at: indexPath.item)
+        pin.removeFromCorePhotos(at: indexPath.item)
         collectionView.deleteItems(at: [indexPath])
     }
     
@@ -49,11 +48,9 @@ extension PhotoAlbumViewController: UICollectionViewDataSource, UICollectionView
                         cell.imageView.image = image
                         cell.activityIndicator.stopAnimating()
                         cell.activityIndicator.isHidden = true
-                        let coreImage = CorePhoto(context: self.dataController.viewContext)
-                        coreImage.corePhoto = data
-                        self.pin.addToCorePhotos(coreImage)
+                        coreUrl.corePhoto = data
                         self.saveContext()
-                        //self.limitDownload()
+                        self.limitDownload()
                     }
                 }
             }
@@ -70,7 +67,7 @@ extension PhotoAlbumViewController: UICollectionViewDataSource, UICollectionView
         }
     }
     fileprivate func limitDownload() {
-        if self.pin.corePhotos!.count < 18 {return} else {self.savedPhotos = true}
+        if self.pin.corePhotos!.count <= 18 {return} else {self.savedPhotos = true}
         self.collectionView.reloadData()
     }
     
@@ -84,7 +81,6 @@ extension PhotoAlbumViewController {
     
     func deletingObjectsFromCoreData(objects: NSOrderedSet) {
         let context = dataController.viewContext
-        
         for object in objects {
             context.delete(object as! NSManagedObject)
         }
