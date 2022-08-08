@@ -16,16 +16,16 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
     
     var dataController:DataController!
     
-    var fetchedResultsController:NSFetchedResultsController<Pin>!
+    var fetchedResultsController:NSFetchedResultsController<CorePhoto>!
     fileprivate func setupFetchedResultsController() {
         
-        let fetchRequest:NSFetchRequest<Pin> = Pin.fetchRequest()
-        let predicate = NSPredicate(format: "latitude == %@", pin.latitude)
+        let fetchRequest:NSFetchRequest<CorePhoto> = CorePhoto.fetchRequest()
+        let predicate = NSPredicate(format: "pin == %@", pin)
         fetchRequest.predicate = predicate
-        let sortDescriptor = NSSortDescriptor(key: "latitude", ascending: false)
+        let sortDescriptor = NSSortDescriptor(key: "coreURL", ascending: false)
         fetchRequest.sortDescriptors = [sortDescriptor]
         
-        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "pin")
+        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "pin-photos")
         fetchedResultsController.delegate = self
         do {
             try fetchedResultsController.performFetch()
@@ -35,7 +35,8 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
     }
     
     //MARK: Properties
-    var savedPhotos: Bool!
+    
+
     
     //MARK: Outlets
     @IBOutlet weak var mapView: MKMapView!
@@ -48,16 +49,15 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
     //MARK: Actions
     @IBAction func newCollectionButtonPressed(_ sender: Any) {
         newCollectionButton.isEnabled = false
-        deletingObjectsFromCoreData(objects: pin.corePhotos!)
+        deletingObjectsFromCoreData()
         downloadingNewImageURLs()
     }
     
     //MARK: Life Cycle
     
     override func viewWillAppear(_ animated: Bool) {
+        setupFetchedResultsController()
         createPinForMap(latitude: pin.latitude, longitude: pin.longitude)
-        debugPrint("Are There any saved photos during viewWillAppear: \(savedPhotos!)")
-        
     }
     
     override func viewDidLoad() {
@@ -108,21 +108,21 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, NSFetchedRe
     }
     
     fileprivate func downloadingNewImageURLs() {
-        FlickrClient.photoRequest(latitude:pin.latitude,longitude:pin.longitude) { response, error in
+        FlickrClient.photoRequest(latitude:pin.latitude,longitude:pin.longitude) { [self] response, error in
             if let response = response {
                 let downloadedURLs = response.photos.photo
                 
                 let coreUrls = downloadedURLs.map { flickrPhoto -> CorePhoto in
-                    let coreItem = CorePhoto(context: self.dataController.viewContext)
+                    let coreItem = CorePhoto(context: dataController.viewContext)
                     coreItem.coreURL = FlickrClient.Endpoints.photoURL(flickrPhoto.server, flickrPhoto.id, flickrPhoto.secret).url
                     return coreItem
                 }
                 
-                self.pin.addToCorePhotos(NSOrderedSet(array: coreUrls))
-                try? self.dataController.viewContext.save()
-                self.savedPhotos = false
-                self.collectionView.reloadData()
-                self.newCollectionButton.isEnabled = true
+                pin.addToCorePhotos(NSOrderedSet(array: coreUrls))
+                saveContext()
+                try? fetchedResultsController.performFetch()
+                collectionView.reloadData()
+                newCollectionButton.isEnabled = true
             } else {
                 print("PhotoCollection could not be created!\(error!.localizedDescription)")
             }

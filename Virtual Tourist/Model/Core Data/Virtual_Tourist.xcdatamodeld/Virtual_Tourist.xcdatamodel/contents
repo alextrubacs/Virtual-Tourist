@@ -3,12 +3,12 @@
     <entity name="CorePhoto" representedClassName="CorePhoto" syncable="YES" codeGenerationType="class">
         <attribute name="corePhoto" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
         <attribute name="coreURL" optional="YES" attributeType="URI"/>
-        <relationship name="pin" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="Pin" inverseName="corePhotos" inverseEntity="Pin"/>
+        <relationship name="pin" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Pin" inverseName="corePhotos" inverseEntity="Pin"/>
     </entity>
     <entity name="Pin" representedClassName="Pin" syncable="YES" codeGenerationType="class">
         <attribute name="latitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="longitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
-        <relationship name="corePhotos" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="CorePhoto" inverseName="pin" inverseEntity="CorePhoto"/>
+        <relationship name="corePhotos" optional="YES" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="CorePhoto" inverseName="pin" inverseEntity="CorePhoto"/>
     </entity>
     <elements>
         <element name="CorePhoto" positionX="-32.7578125" positionY="358.57421875" width="128" height="74"/>

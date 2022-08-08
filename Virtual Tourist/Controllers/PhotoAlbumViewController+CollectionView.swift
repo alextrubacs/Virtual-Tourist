@@ -17,19 +17,20 @@ extension PhotoAlbumViewController: UICollectionViewDataSource, UICollectionView
     
     // MARK: Collection View Delegate Methods
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        
         return pin.corePhotos?.count ?? 0
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PhotoCell.defaultReuseIdentifier, for: indexPath) as! PhotoCell
-        let coreImage = pin.corePhotos?.object(at: indexPath.item) as! CorePhoto
+        let coreImage = fetchedResultsController.object(at: indexPath)
         checkForSavedPhotos(coreImage, cell)
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        pin.removeFromCorePhotos(at: indexPath.item)
+        let photo = fetchedResultsController.object(at: indexPath)
+        dataController.viewContext.delete(photo)
+        try? dataController.viewContext.save()
         collectionView.deleteItems(at: [indexPath])
     }
     
@@ -49,17 +50,11 @@ extension PhotoAlbumViewController: UICollectionViewDataSource, UICollectionView
                     cell.activityIndicator.isHidden = true
                     coreImage.corePhoto = data
                     self.saveContext()
-                    //self.limitDownload()
+                    self.collectionView.reloadData()
                 }
             }
         }
     }
-    
-    fileprivate func limitDownload() {
-        if self.pin.corePhotos!.count < 18 {return} else {self.savedPhotos = true}
-        self.collectionView.reloadData()
-    }
-    
 }
 // MARK: Data Controller Methods
 extension PhotoAlbumViewController {
@@ -68,10 +63,12 @@ extension PhotoAlbumViewController {
         try? dataController.viewContext.save()
     }
     
-    func deletingObjectsFromCoreData(objects: NSOrderedSet) {
+    func deletingObjectsFromCoreData() {
+        let objects = fetchedResultsController.fetchedObjects!
         let context = dataController.viewContext
+        
         for object in objects {
-            context.delete(object as! NSManagedObject)
+            context.delete(object)
         }
         saveContext()
     }
